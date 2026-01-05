@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+/* Design tokens */
+:root {
+  --bg-body: #050816;
+  --bg-elevated: #0b1020;
+  --border-subtle: #1e293b;
+}
+
+/* App baseline */
+html,
+body {
+  height: 100%;
+}
