@@ -11,6 +11,7 @@ import {
   Truck,
   BarChart3,
   Settings,
+  Users,
 } from "lucide-react";
 
 type SidebarProps = {
@@ -25,6 +26,7 @@ const navItems = [
   { label: "Vendors", href: "/vendors", icon: Truck },
   { label: "Reports", href: "/reports", icon: BarChart3 },
   { label: "Settings", href: "/settings", icon: Settings },
+  { label: "Users", href: "/settings/users", icon: Users },
 ];
 
 export default function Sidebar({ collapsed }: SidebarProps) {
