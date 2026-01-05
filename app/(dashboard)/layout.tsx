@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 
@@ -9,9 +10,23 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [ready, setReady] = useState(false); // 👈 auth check flag
 
-  // Load persisted state
+  // 🔐 AUTH GUARD (runs first)
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) {
+      router.replace("/login");
+      return;
+    }
+
+    setReady(true);
+  }, [router]);
+
+  // Load persisted sidebar state
   useEffect(() => {
     const stored = localStorage.getItem("sidebar-collapsed");
     if (stored !== null) {
@@ -19,10 +34,13 @@ export default function DashboardLayout({
     }
   }, []);
 
-  // Persist state
+  // Persist sidebar state
   useEffect(() => {
     localStorage.setItem("sidebar-collapsed", String(collapsed));
   }, [collapsed]);
+
+  // ⏳ Prevent flash before auth check
+  if (!ready) return null;
 
   return (
     <div className="flex min-h-screen bg-bg-body text-white">

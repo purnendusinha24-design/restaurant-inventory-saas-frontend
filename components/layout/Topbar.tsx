@@ -1,14 +1,20 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Topbar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   const segments = pathname
     .split("/")
     .filter(Boolean)
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1));
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    router.replace("/login");
+  };
 
   return (
     <div className="flex h-full w-full items-center justify-between">
@@ -23,8 +29,17 @@ export default function Topbar() {
         ))}
       </div>
 
-      {/* Right side (user placeholder) */}
-      <div className="text-sm">User</div>
+      {/* Right side */}
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-slate-300">User</span>
+
+        <button
+          onClick={handleLogout}
+          className="rounded-md bg-slate-800 px-3 py-1.5 text-sm text-white hover:bg-slate-700"
+        >
+          Logout
+        </button>
+      </div>
     </div>
   );
 }
