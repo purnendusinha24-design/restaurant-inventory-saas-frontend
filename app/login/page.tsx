@@ -1,14 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { login, signup } from "@/lib/api/auth";
+import { useAuth } from "@/lib/use-auth";
+import type { AuthResponse } from "@/lib/api/types";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { login: authLogin } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // signup modal state
+  // Signup modal state
   const [showSignup, setShowSignup] = useState(false);
   const [signupForm, setSignupForm] = useState({
     organizationName: "",
@@ -18,21 +24,44 @@ export default function LoginPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  // =========================
+  // LOGIN
+  // =========================
   const handleLogin = async () => {
+    setError("");
+
     try {
-      await login(email, password);
-      window.location.href = "/dashboard";
+      const res = await login(email, password);
+
+      authLogin(res.accessToken, {
+        id: res.user.id,
+        role: res.user.role,
+        organizationId: res.user.organization.id,
+      });
+
+      router.replace("/dashboard");
     } catch {
       setError("Invalid email or password");
     }
   };
 
+  // =========================
+  // SIGNUP
+  // =========================
   const handleSignup = async () => {
     setSubmitting(true);
+
     try {
-      await signup(signupForm);
-      window.location.href = "/dashboard";
-    } catch (e) {
+      const res: AuthResponse = await signup(signupForm);
+
+      authLogin(res.accessToken, {
+        id: res.user.id,
+        role: res.user.role,
+        organizationId: res.user.organization.id,
+      });
+
+      router.replace("/dashboard");
+    } catch {
       alert("Signup failed");
     } finally {
       setSubmitting(false);
@@ -41,10 +70,11 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-700">
+      {/* LOGIN CARD */}
       <div className="w-full max-w-sm space-y-4 rounded-lg bg-slate-900 p-6">
         <h1 className="text-2xl font-bold text-blue-500">Login</h1>
 
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {error && <p className="text-sm text-red-500">{error}</p>}
 
         <input
           className="w-full rounded border border-slate-700 bg-slate-800 p-2 text-white"
@@ -69,7 +99,6 @@ export default function LoginPage() {
           Login
         </button>
 
-        {/* Signup trigger */}
         <p className="text-center text-sm text-slate-400">
           New restaurant?{" "}
           <button
@@ -81,7 +110,7 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Signup Modal */}
+      {/* SIGNUP MODAL */}
       {showSignup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-700">
           <div className="w-full max-w-md rounded-lg bg-slate-900 p-6">
@@ -107,10 +136,7 @@ export default function LoginPage() {
                 className="w-full rounded bg-slate-800 p-2 text-white"
                 value={signupForm.name}
                 onChange={(e) =>
-                  setSignupForm({
-                    ...signupForm,
-                    name: e.target.value,
-                  })
+                  setSignupForm({ ...signupForm, name: e.target.value })
                 }
               />
 
@@ -120,10 +146,7 @@ export default function LoginPage() {
                 className="w-full rounded bg-slate-800 p-2 text-white"
                 value={signupForm.email}
                 onChange={(e) =>
-                  setSignupForm({
-                    ...signupForm,
-                    email: e.target.value,
-                  })
+                  setSignupForm({ ...signupForm, email: e.target.value })
                 }
               />
 
@@ -133,10 +156,7 @@ export default function LoginPage() {
                 className="w-full rounded bg-slate-800 p-2 text-white"
                 value={signupForm.password}
                 onChange={(e) =>
-                  setSignupForm({
-                    ...signupForm,
-                    password: e.target.value,
-                  })
+                  setSignupForm({ ...signupForm, password: e.target.value })
                 }
               />
             </div>

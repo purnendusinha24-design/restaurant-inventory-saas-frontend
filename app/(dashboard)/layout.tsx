@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
+import { useAuth } from "@/lib/use-auth";
 
 export default function DashboardLayout({
   children,
@@ -11,20 +12,16 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
+
   const [collapsed, setCollapsed] = useState(false);
-  const [ready, setReady] = useState(false); // 👈 auth check flag
 
-  // 🔐 AUTH GUARD (runs first)
+  // 🔐 AUTH GUARD (single source of truth)
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-
-    if (!token) {
+    if (!isLoading && !isAuthenticated) {
       router.replace("/login");
-      return;
     }
-
-    setReady(true);
-  }, [router]);
+  }, [isAuthenticated, isLoading, router]);
 
   // Load persisted sidebar state
   useEffect(() => {
@@ -39,8 +36,10 @@ export default function DashboardLayout({
     localStorage.setItem("sidebar-collapsed", String(collapsed));
   }, [collapsed]);
 
-  // ⏳ Prevent flash before auth check
-  if (!ready) return null;
+  // ⏳ Prevent flash before auth resolution
+  if (isLoading || !isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen bg-bg-body text-white">

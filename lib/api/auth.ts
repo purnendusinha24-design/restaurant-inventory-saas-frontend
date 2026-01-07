@@ -1,35 +1,28 @@
+// frontend/lib/api/auth.ts
+
 import { apiFetch } from "./client";
 import type { AuthResponse } from "./types";
-import type { AuthUser } from "./types";
 
-type LoginResponse = {
-  accessToken: string;
-  user: AuthUser;
-};
-
-export async function login(email: string, password: string) {
-  const res = await apiFetch<LoginResponse>("/auth/login", {
+// 🔐 LOGIN
+export async function login(
+  email: string,
+  password: string
+): Promise<AuthResponse> {
+  return apiFetch<AuthResponse>("/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
-
-  // 🔥 THIS IS CRITICAL
-  localStorage.setItem("accessToken", res.accessToken);
-
-  return res;
 }
 
+// 🔐 SIGNUP
 export async function signup(data: {
   organizationName: string;
   name: string;
   email: string;
   password: string;
-}) {
-  const res = await apiFetch<AuthResponse>("/auth/signup", {
+}): Promise<AuthResponse> {
+  return apiFetch<AuthResponse>("/auth/signup", {
     method: "POST",
     body: JSON.stringify(data),
   });
-
-  localStorage.setItem("accessToken", res.accessToken);
-  return res;
 }
