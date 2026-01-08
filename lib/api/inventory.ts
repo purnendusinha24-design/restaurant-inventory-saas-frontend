@@ -4,7 +4,7 @@ import { apiFetch } from "./client";
  * FRONTEND enum (mirrors backend Prisma enum)
  * Keep strings identical to backend
  */
-export type StockLogReason = "MANUAL" | "PURCHASE" | "WASTAGE" | "ADJUSTMENT";
+export type StockLogReason = "PURCHASE" | "WASTE" | "ADJUSTMENT";
 
 export type InventorySnapshotItem = {
   ingredientId: string;
@@ -17,44 +17,48 @@ export type InventorySnapshotItem = {
   lastUpdatedAt: string;
 };
 
+// =====================================================
+// INVENTORY SNAPSHOT
+// =====================================================
 export async function fetchInventorySnapshot(outletId: string) {
   return apiFetch<{ data: InventorySnapshotItem[] }>(
     `/inventory/snapshot/${outletId}`
   );
 }
 
-export async function stockIn(
+// =====================================================
+// ADJUST STOCK (SINGLE MUTATION)
+// quantity > 0 → stock in
+// quantity < 0 → stock out
+// =====================================================
+export async function adjustStock(
   outletId: string,
-  ingredientId: string,
-  quantity: number,
-  reason: StockLogReason,
-  referenceId?: string
+  payload: {
+    ingredientId: string;
+    quantity: number;
+    reason: StockLogReason;
+    referenceId?: string;
+  }
 ) {
-  return apiFetch(`/inventory/stock-in/${outletId}`, {
+  return apiFetch(`/inventory/adjust/${outletId}`, {
     method: "POST",
-    body: JSON.stringify({
-      ingredientId,
-      quantity,
-      reason,
-      referenceId,
-    }),
+    body: JSON.stringify(payload),
   });
 }
 
-export async function stockOut(
+// =====================================================
+// INIT INVENTORY
+// =====================================================
+export async function initInventory(
   outletId: string,
-  ingredientId: string,
-  quantity: number,
-  reason: StockLogReason,
-  referenceId?: string
+  payload: {
+    ingredientId: string;
+    currentStock: number;
+    minStock: number;
+  }
 ) {
-  return apiFetch(`/inventory/stock-out/${outletId}`, {
+  return apiFetch(`/inventory/init/${outletId}`, {
     method: "POST",
-    body: JSON.stringify({
-      ingredientId,
-      quantity,
-      reason,
-      referenceId,
-    }),
+    body: JSON.stringify(payload),
   });
 }

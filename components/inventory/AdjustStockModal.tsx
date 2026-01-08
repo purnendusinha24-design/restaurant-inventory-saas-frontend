@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { stockIn, stockOut } from "@/lib/api/inventory";
-
-type StockReason = "MANUAL" | "WASTAGE" | "PURCHASE";
+import { adjustStock, StockLogReason } from "@/lib/api/inventory";
 
 type Props = {
   outletId: string;
@@ -23,14 +21,16 @@ export default function AdjustStockModal({
   onSuccess,
 }: Props) {
   const [quantity, setQuantity] = useState<number>(0);
-  const [reason, setReason] = useState<StockReason>("MANUAL");
+  const [reason, setReason] = useState<StockLogReason>(
+    mode === "IN" ? "PURCHASE" : "WASTE"
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // reset when modal opens
+  // Reset when modal opens or mode changes
   useEffect(() => {
     setQuantity(0);
-    setReason("MANUAL");
+    setReason(mode === "IN" ? "PURCHASE" : "WASTE");
     setError(null);
   }, [ingredientId, mode]);
 
@@ -46,11 +46,13 @@ export default function AdjustStockModal({
     try {
       setLoading(true);
 
-      if (mode === "IN") {
-        await stockIn(outletId, ingredientId, quantity, reason);
-      } else {
-        await stockOut(outletId, ingredientId, quantity, reason);
-      }
+      const signedQuantity = mode === "IN" ? quantity : -quantity;
+
+      await adjustStock(outletId, {
+        ingredientId,
+        quantity: signedQuantity,
+        reason,
+      });
 
       onSuccess();
       onClose();
@@ -60,6 +62,10 @@ export default function AdjustStockModal({
       setLoading(false);
     }
   }
+
+  // Allowed reasons depend on action
+  const allowedReasons: StockLogReason[] =
+    mode === "IN" ? ["PURCHASE", "ADJUSTMENT"] : ["WASTE", "ADJUSTMENT"];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
@@ -84,12 +90,16 @@ export default function AdjustStockModal({
 
           <select
             value={reason}
-            onChange={(e) => setReason(e.target.value as StockReason)}
+            onChange={(e) => setReason(e.target.value as StockLogReason)}
             className="w-full rounded bg-slate-800 px-3 py-2 text-slate-100"
           >
-            <option value="MANUAL">Manual</option>
-            <option value="PURCHASE">Purchase</option>
-            <option value="WASTAGE">Wastage</option>
+            {allowedReasons.map((r) => (
+              <option key={r} value={r}>
+                {r === "PURCHASE" && "Purchase"}
+                {r === "WASTE" && "Wastage"}
+                {r === "ADJUSTMENT" && "Adjustment"}
+              </option>
+            ))}
           </select>
 
           {error && <p className="text-sm text-red-400">{error}</p>}
