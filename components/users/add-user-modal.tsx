@@ -5,13 +5,13 @@ import { createUser } from "@/lib/api/users";
 
 type Props = {
   onClose: () => void;
-  onCreated: (user: any) => void;
+  onInvited: () => Promise<void> | void;
 };
 
-export function AddUserModal({ onClose, onCreated }: Props) {
+export function AddUserModal({ onClose, onInvited }: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(""); // user enters 10 digits
   const [role, setRole] = useState<"MANAGER" | "STAFF">("STAFF");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,25 +22,39 @@ export function AddUserModal({ onClose, onCreated }: Props) {
     setError(null);
 
     try {
+      // 🔹 Normalize phone input (digits only)
+      const rawPhone = phone.replace(/\D/g, "");
+
+      // 🔒 India-only validation (adjust later if needed)
+      if (rawPhone.length !== 10) {
+        throw new Error("Enter a valid 10-digit mobile number");
+      }
+
+      // ✅ Convert to E.164
+      const phoneE164 = `+91${rawPhone}`;
+
+      // 🔹 Create invited user (store E.164)
       const user = await createUser({
         name,
         email,
-        phone: phone.startsWith("+") ? phone.slice(1) : phone,
+        phone: phoneE164,
         role,
       });
 
-      // 👉 Build invite URL
+      // 🔹 WhatsApp requires NO "+"
+      const whatsappNumber = phoneE164.replace("+", "");
+
       const inviteUrl = `${window.location.origin}/accept-invite?token=${user.inviteToken}`;
 
       const message = encodeURIComponent(
         `You've been invited to join the restaurant system.\n\nSet your password here:\n${inviteUrl}`
       );
 
-      const whatsappUrl = `https://wa.me/${user.phone}?text=${message}`;
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
 
       window.open(whatsappUrl, "_blank");
 
-      onCreated(user);
+      await onInvited();
       onClose();
     } catch (err: any) {
       setError(err.message || "Failed to send invite");
@@ -77,30 +91,21 @@ export function AddUserModal({ onClose, onCreated }: Props) {
           <input
             required
             type="tel"
-            placeholder="WhatsApp Number (e.g. +919876543210)"
+            placeholder="WhatsApp Number (10-digit, no country code)"
             value={phone}
-            onChange={(e) => {
-              // allow only numbers
-              const value = e.target.value.replace(/[^\d+]/g, "");
-
-              // allow only one leading +
-              if (value.startsWith("+")) {
-                setPhone("+" + value.slice(1).replace(/\+/g, ""));
-              } else {
-                setPhone(value.replace(/\+/g, ""));
-              }
-            }}
+            onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
             className="w-full rounded bg-slate-800 px-3 py-2 text-slate-100"
             minLength={10}
-            maxLength={15}
+            maxLength={10}
           />
+
           <p className="text-xs text-slate-400">
-            Include country code. Example: +91XXXXXXXXXX
+            Country code <b>+91</b> will be added automatically
           </p>
 
           <select
             value={role}
-            onChange={(e) => setRole(e.target.value as any)}
+            onChange={(e) => setRole(e.target.value as "MANAGER" | "STAFF")}
             className="w-full rounded bg-slate-800 px-3 py-2 text-slate-100"
           >
             <option value="STAFF">Staff</option>

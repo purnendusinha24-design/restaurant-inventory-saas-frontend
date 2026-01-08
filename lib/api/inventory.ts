@@ -1,15 +1,60 @@
 import { apiFetch } from "./client";
 
-export type InventoryItem = {
-  id: string;
-  name: string;
-  category: string;
-  stock: number;
+/**
+ * FRONTEND enum (mirrors backend Prisma enum)
+ * Keep strings identical to backend
+ */
+export type StockLogReason = "MANUAL" | "PURCHASE" | "WASTAGE" | "ADJUSTMENT";
+
+export type InventorySnapshotItem = {
+  ingredientId: string;
+  ingredientName: string;
   unit: string;
+  currentStock: number;
   minStock: number;
-  updatedAt: string;
+  isLowStock: boolean;
+  isActive: boolean;
+  lastUpdatedAt: string;
 };
 
-export async function getInventory(): Promise<InventoryItem[]> {
-  return apiFetch("/inventory");
+export async function fetchInventorySnapshot(outletId: string) {
+  return apiFetch<{ data: InventorySnapshotItem[] }>(
+    `/inventory/snapshot/${outletId}`
+  );
+}
+
+export async function stockIn(
+  outletId: string,
+  ingredientId: string,
+  quantity: number,
+  reason: StockLogReason,
+  referenceId?: string
+) {
+  return apiFetch(`/inventory/stock-in/${outletId}`, {
+    method: "POST",
+    body: JSON.stringify({
+      ingredientId,
+      quantity,
+      reason,
+      referenceId,
+    }),
+  });
+}
+
+export async function stockOut(
+  outletId: string,
+  ingredientId: string,
+  quantity: number,
+  reason: StockLogReason,
+  referenceId?: string
+) {
+  return apiFetch(`/inventory/stock-out/${outletId}`, {
+    method: "POST",
+    body: JSON.stringify({
+      ingredientId,
+      quantity,
+      reason,
+      referenceId,
+    }),
+  });
 }

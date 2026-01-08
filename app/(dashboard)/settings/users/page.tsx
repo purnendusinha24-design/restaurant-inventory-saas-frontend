@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/use-auth";
-import { fetchUsers, updateUserStatus } from "@/lib/api/users";
+import { fetchUsers, updateUserStatus, deleteUser } from "@/lib/api/users";
 import type { UserListItem } from "@/lib/api/types";
 import { AddUserModal } from "@/components/users/add-user-modal";
-import { deleteUser } from "@/lib/api/users";
 
 /* ----------------------------------------
    Status style helper
@@ -25,16 +24,19 @@ export default function UsersPage() {
   const isOwner = user?.role === "OWNER";
 
   /* ----------------------------------------
-     FETCH USERS
+     FETCH / REFETCH USERS (single source)
   ----------------------------------------- */
+  const refetchUsers = async () => {
+    const data = await fetchUsers();
+    setUsers(data);
+  };
+
   useEffect(() => {
-    fetchUsers()
-      .then(setUsers)
-      .finally(() => setLoading(false));
+    refetchUsers().finally(() => setLoading(false));
   }, []);
 
   /* ----------------------------------------
-     STATUS TOGGLE
+     STATUS TOGGLE (ACTIVE <-> INACTIVE only)
   ----------------------------------------- */
   const handleStatusChange = async (id: string) => {
     await updateUserStatus(id);
@@ -51,16 +53,18 @@ export default function UsersPage() {
     );
   };
 
+  /* ----------------------------------------
+     DELETE USER (INACTIVE only)
+  ----------------------------------------- */
   const handleDeleteUser = async (id: string) => {
     const confirmed = window.confirm(
-      "This will permanently remove the invited user. Continue?"
+      "This will permanently remove the user. Continue?"
     );
 
     if (!confirmed) return;
 
     await deleteUser(id);
 
-    // Remove from UI immediately
     setUsers((prev) => prev.filter((u) => u.id !== id));
   };
 
@@ -70,6 +74,13 @@ export default function UsersPage() {
   if (authLoading || loading) {
     return <p className="text-slate-400">Loading users…</p>;
   }
+
+  /* ----------------------------------------
+     DEFENSIVE FILTER (never render INVITED)
+  ----------------------------------------- */
+  const visibleUsers = users.filter(
+    (u) => u.status === "ACTIVE" || u.status === "INACTIVE"
+  );
 
   return (
     <div className="space-y-4">
@@ -86,7 +97,7 @@ export default function UsersPage() {
       )}
 
       {/* EMPTY STATE */}
-      {users.length === 0 ? (
+      {visibleUsers.length === 0 ? (
         <div className="rounded-lg border border-slate-800 p-6 text-slate-400">
           No users found.
         </div>
@@ -104,38 +115,39 @@ export default function UsersPage() {
             </thead>
 
             <tbody>
-              {users.map((u) => {
-                const canEdit = isOwner && u.role !== "OWNER";
+              {visibleUsers.map((u) => {
+                const canEdit =
+                  isOwner && u.role !== "OWNER" && u.status !== "INVITED";
 
                 return (
                   <tr
                     key={u.id}
-                    className="border-t border-slate-800 hover:bg-slate-900/40"
+                    className="border-t border-slate-800 hover:bg-slate-500/40"
                   >
-                    <td className="px-4 py-2 text-blue-950 text-center">
+                    <td className="px-4 py-2 text-blue-900 text-center">
                       {u.name}
                     </td>
-                    <td className="px-4 py-2 text-blue-950 text-center">
+                    <td className="px-4 py-2 text-blue-900 text-center">
                       {u.email}
                     </td>
-                    <td className="px-4 py-2 text-blue-950 text-center">
+                    <td className="px-4 py-2 text-blue-900 text-center">
                       {u.phone}
                     </td>
-                    <td className="px-4 py-2 text-blue-950 text-center">
+                    <td className="px-4 py-2 text-blue-900 text-center">
                       {u.role}
                     </td>
 
-                    <td className="px-4 py-2 flex items-center gap-1.5">
+                    <td className="px-4 py-2 flex items-center gap-1.5 justify-center">
                       {canEdit ? (
                         <select
                           value={u.status}
                           onChange={() => handleStatusChange(u.id)}
                           className={`
-        rounded px-3 py-1 text-sm font-medium
-        cursor-pointer transition-colors duration-200
-        focus:outline-none focus:ring-2 focus:ring-slate-500
-        ${statusSelectClass(u.status)}
-      `}
+                            rounded px-3 py-1 text-sm font-medium
+                            cursor-pointer transition-colors duration-200
+                            focus:outline-none focus:ring-2 focus:ring-slate-500
+                            ${statusSelectClass(u.status)}
+                          `}
                         >
                           <option value="ACTIVE">Active</option>
                           <option value="INACTIVE">Inactive</option>
@@ -143,20 +155,19 @@ export default function UsersPage() {
                       ) : (
                         <span
                           className={`
-        inline-flex items-center rounded-full
-        px-3 py-1 text-xs font-semibold
-        ${
-          u.status === "ACTIVE"
-            ? "bg-green-900 text-green-300"
-            : "bg-red-900 text-red-300"
-        }
-      `}
+                            inline-flex items-center rounded-full
+                            px-3 py-1 text-xs font-semibold
+                            ${
+                              u.status === "ACTIVE"
+                                ? "bg-green-900 text-green-300"
+                                : "bg-red-900 text-red-300"
+                            }
+                          `}
                         >
                           {u.status}
                         </span>
                       )}
 
-                      {/* DELETE — INVITED ONLY */}
                       {isOwner && u.status === "INACTIVE" && (
                         <button
                           onClick={() => handleDeleteUser(u.id)}
@@ -178,7 +189,9 @@ export default function UsersPage() {
       {showAddUser && (
         <AddUserModal
           onClose={() => setShowAddUser(false)}
-          onCreated={(newUser) => setUsers((prev) => [newUser, ...prev])}
+          onInvited={async () => {
+            await refetchUsers();
+          }}
         />
       )}
     </div>

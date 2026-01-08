@@ -26,3 +26,21 @@ export async function signup(data: {
     body: JSON.stringify(data),
   });
 }
+
+export const validateInvite = (token: string) =>
+  apiFetch<{
+    email: string;
+    role: string;
+    organization: { id: string; name: string };
+  }>(`/auth/invite/${token}`);
+
+// ✅ ACCEPT INVITE
+export async function acceptInvite(data: {
+  token: string;
+  password: string;
+}): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>("/auth/accept-invite", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}

@@ -7,18 +7,32 @@ export async function apiFetch<T>(
   const token =
     typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
+  const outletId =
+    typeof window !== "undefined"
+      ? localStorage.getItem("activeOutletId")
+      : null;
+
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
       ...(token && { Authorization: `Bearer ${token}` }),
+      ...(outletId && { "x-outlet-id": outletId }), // 🔴 IMPORTANT
       ...(options.headers || {}),
     },
   });
 
   if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || "API request failed");
+    let message = "API request failed";
+
+    try {
+      const data = await res.json();
+      message = data.message || message;
+    } catch {
+      message = await res.text();
+    }
+
+    throw new Error(message);
   }
 
   return res.json();
