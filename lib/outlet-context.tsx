@@ -1,8 +1,11 @@
-// frontend/lib/outlet-context.tsx
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { fetchOutlets, Outlet } from "@/lib/api/outlets";
+
+/* =========================
+   Types
+========================= */
 
 type OutletContextType = {
   outlets: Outlet[];
@@ -12,7 +15,27 @@ type OutletContextType = {
   loading: boolean;
 };
 
+/* =========================
+   Context
+========================= */
+
 const OutletContext = createContext<OutletContextType | null>(null);
+
+/* =========================
+   Helpers
+========================= */
+
+function resolveInitialOutlet(
+  outlets: Outlet[],
+  savedId: string | null
+): Outlet | null {
+  if (!outlets.length) return null;
+  return outlets.find((o) => o.id === savedId) ?? outlets[0];
+}
+
+/* =========================
+   Provider
+========================= */
 
 export function OutletProvider({ children }: { children: React.ReactNode }) {
   const [outlets, setOutlets] = useState<Outlet[]>([]);
@@ -20,37 +43,60 @@ export function OutletProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function load() {
+    let mounted = true;
+
+    async function init() {
       try {
         const data = await fetchOutlets();
+        if (!mounted) return;
+
         setOutlets(data);
 
-        const savedId = localStorage.getItem("activeOutletId");
-        const initial = data.find((o) => o.id === savedId) || data[0] || null;
+        const savedId =
+          typeof window !== "undefined"
+            ? localStorage.getItem("activeOutletId")
+            : null;
 
-        setActiveOutlet(initial);
+        const initial = resolveInitialOutlet(data, savedId);
+
         if (initial) {
+          setActiveOutlet(initial);
           localStorage.setItem("activeOutletId", initial.id);
         }
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
 
-    load();
+    init();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  function setActiveOutletId(id: string) {
-    const outlet = outlets.find((o) => o.id === id) || null;
-    setActiveOutlet(outlet);
-    if (outlet) localStorage.setItem("activeOutletId", outlet.id);
-  }
+  /* =========================
+     Actions
+  ========================= */
 
-  function addOutlet(outlet: Outlet) {
+  const setActiveOutletId = (id: string) => {
+    const outlet = outlets.find((o) => o.id === id) ?? null;
+    setActiveOutlet(outlet);
+
+    if (outlet) {
+      localStorage.setItem("activeOutletId", outlet.id);
+    }
+  };
+
+  const addOutlet = (outlet: Outlet) => {
     setOutlets((prev) => [...prev, outlet]);
     setActiveOutlet(outlet);
     localStorage.setItem("activeOutletId", outlet.id);
-  }
+  };
+
+  /* =========================
+     Render
+  ========================= */
 
   return (
     <OutletContext.Provider
@@ -67,8 +113,14 @@ export function OutletProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useOutlet() {
+/* =========================
+   Hook
+========================= */
+
+export function useOutlet(): OutletContextType {
   const ctx = useContext(OutletContext);
-  if (!ctx) throw new Error("useOutlet must be used within OutletProvider");
+  if (!ctx) {
+    throw new Error("useOutlet must be used within OutletProvider");
+  }
   return ctx;
 }

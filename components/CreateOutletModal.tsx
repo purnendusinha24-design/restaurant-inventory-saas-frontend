@@ -1,18 +1,20 @@
-// frontend/components/CreateOutletModal.tsx
 "use client";
 
 import { useState } from "react";
 import { createOutlet, createFirstOutlet } from "@/lib/api/outlets";
 import { useOutlet } from "@/lib/outlet-context";
 
-type Props = {
+type CreateOutletModalProps = {
   open: boolean;
-  force?: boolean;
-  onClose?: () => void;
+  onClose: () => void;
 };
 
-export default function CreateOutletModal({ open, force, onClose }: Props) {
-  const { addOutlet, outlets } = useOutlet();
+export default function CreateOutletModal({
+  open,
+  onClose,
+}: CreateOutletModalProps) {
+  const { outlets, addOutlet } = useOutlet();
+
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,8 +22,8 @@ export default function CreateOutletModal({ open, force, onClose }: Props) {
 
   if (!open) return null;
 
-  async function submit() {
-    if (!name.trim()) return;
+  async function handleCreate() {
+    if (!name.trim() || loading) return;
 
     setLoading(true);
     setError(null);
@@ -29,7 +31,7 @@ export default function CreateOutletModal({ open, force, onClose }: Props) {
     try {
       const payload = {
         name: name.trim(),
-        address: address || undefined,
+        address: address.trim() || undefined,
       };
 
       const outlet =
@@ -38,9 +40,9 @@ export default function CreateOutletModal({ open, force, onClose }: Props) {
           : await createOutlet(payload);
 
       addOutlet(outlet);
-      onClose?.();
-    } catch (err: any) {
-      setError(err.message ?? "Failed to create outlet");
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create outlet");
     } finally {
       setLoading(false);
     }
@@ -48,8 +50,13 @@ export default function CreateOutletModal({ open, force, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="w-full max-w-md rounded-lg bg-slate-900 p-6">
+      <div className="w-full max-w-md rounded-xl bg-slate-900 p-6 shadow-xl">
         <h2 className="text-lg font-semibold text-white">Create Outlet</h2>
+
+        <p className="mt-1 text-sm text-slate-400">
+          You can create an outlet now or later. Some features require at least
+          one outlet.
+        </p>
 
         <div className="mt-4 space-y-3">
           <input
@@ -70,20 +77,20 @@ export default function CreateOutletModal({ open, force, onClose }: Props) {
           {error && <p className="text-sm text-red-400">{error}</p>}
         </div>
 
-        <div className="mt-6 flex justify-end gap-2">
-          {!force && (
-            <button
-              onClick={onClose}
-              className="rounded-md bg-slate-800 px-4 py-2 text-sm"
-            >
-              Cancel
-            </button>
-          )}
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md bg-slate-800 px-4 py-2 text-sm text-white hover:bg-slate-700"
+          >
+            Cancel
+          </button>
 
           <button
-            onClick={submit}
+            type="button"
+            onClick={handleCreate}
             disabled={loading}
-            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium"
+            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
           >
             {loading ? "Creating…" : "Create"}
           </button>

@@ -44,6 +44,12 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     icon: <ShoppingCart size={18} />,
   },
   {
+    label: "Kitchen",
+    href: "/kitchen",
+    roles: ["OWNER", "MANAGER", "STAFF"],
+    icon: <ShoppingCart size={18} />,
+  },
+  {
     label: "Vendors",
     href: "/vendors",
     roles: ["OWNER", "MANAGER"],
