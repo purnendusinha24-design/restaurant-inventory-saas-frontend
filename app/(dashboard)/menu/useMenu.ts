@@ -16,7 +16,7 @@ export type MenuItem = {
 type UseMenuResult = {
   menu: MenuItem[];
   isLoading: boolean;
-  isError: string | null;
+  error: string | null;
   refresh: () => Promise<void>;
 };
 
@@ -36,14 +36,10 @@ export function useMenu(outletId?: string): UseMenuResult {
     setError(null);
 
     try {
-      const data = await apiFetch<MenuItem[]>(`/menu?outletId=${outletId}`);
+      const data = await apiFetch<MenuItem[]>(`/menu/${outletId}`);
       setMenu(data);
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Failed to fetch menu");
-      }
+      setError(err instanceof Error ? err.message : "Failed to fetch menu");
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +52,7 @@ export function useMenu(outletId?: string): UseMenuResult {
   return {
     menu,
     isLoading,
-    isError: error,
+    error,
     refresh: fetchMenu,
   };
 }

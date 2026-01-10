@@ -1,6 +1,20 @@
+import { ApiError } from "./ApiError";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-export async function apiFetch<T>(
+function getErrorMessage(data: unknown): string | undefined {
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    "message" in data &&
+    typeof (data as { message?: unknown }).message === "string"
+  ) {
+    return (data as { message: string }).message;
+  }
+  return undefined;
+}
+
+export async function apiFetch<T = unknown>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -13,27 +27,34 @@ export async function apiFetch<T>(
       : null;
 
   const res = await fetch(`${API_BASE_URL}${path}`, {
+    credentials: "include",
     ...options,
     headers: {
       "Content-Type": "application/json",
       ...(token && { Authorization: `Bearer ${token}` }),
-      ...(outletId && { "x-outlet-id": outletId }), // 🔴 IMPORTANT
+      ...(outletId && { "x-outlet-id": outletId }),
       ...(options.headers || {}),
     },
   });
 
-  if (!res.ok) {
-    let message = "API request failed";
-
-    try {
-      const data = await res.json();
-      message = data.message || message;
-    } catch {
-      message = await res.text();
-    }
-
-    throw new Error(message);
+  // ✅ No content (DELETE, some PUTs)
+  if (res.status === 204) {
+    return undefined as T;
   }
 
-  return res.json();
+  let data: unknown = null;
+
+  const contentType = res.headers.get("content-type");
+  if (contentType?.includes("application/json")) {
+    data = await res.json().catch(() => null);
+  }
+
+  if (!res.ok) {
+    throw new ApiError(
+      getErrorMessage(data) || res.statusText || "Request failed",
+      res.status
+    );
+  }
+
+  return data as T;
 }

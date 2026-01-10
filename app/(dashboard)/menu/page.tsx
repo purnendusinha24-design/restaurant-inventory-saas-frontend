@@ -5,14 +5,24 @@ import { useMenu } from "./useMenu";
 import MenuTable from "./MenuTable";
 import MenuForm from "./MenuForm";
 import Button from "@/components/ui/Button";
-import { useOutlet } from "@/lib/api/useOutlet";
+import { useOutlet } from "@/lib/outlet-context";
 
 export default function MenuPage() {
-  const { outletId } = useOutlet();
+  const { activeOutlet } = useOutlet();
+  const outletId = activeOutlet?.id;
+
   const { menu, isLoading, refresh } = useMenu(outletId);
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
+
+  if (!outletId) {
+    return (
+      <div className="p-6 text-gray-500">
+        Please select an outlet to manage menu.
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -44,7 +54,10 @@ export default function MenuPage() {
           outletId={outletId}
           initialData={editing}
           onClose={() => setOpen(false)}
-          onSaved={refresh}
+          onSaved={() => {
+            refresh();
+            setOpen(false);
+          }}
         />
       )}
     </div>
