@@ -1,14 +1,7 @@
 import Button from "@/components/ui/Button";
 import Switch from "@/components/ui/Switch";
 import { apiFetch } from "@/lib/api/client";
-
-type MenuItem = {
-  id: string;
-  name: string;
-  price: number;
-  category?: string;
-  isActive: boolean; // ✅ align with backend
-};
+import type { MenuItem } from "./types";
 
 type MenuTableProps = {
   outletId: string;

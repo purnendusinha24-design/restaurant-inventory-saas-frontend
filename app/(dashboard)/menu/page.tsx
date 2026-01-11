@@ -6,6 +6,7 @@ import MenuTable from "./MenuTable";
 import MenuForm from "./MenuForm";
 import Button from "@/components/ui/Button";
 import { useOutlet } from "@/lib/outlet-context";
+import type { MenuItem } from "./types";
 
 export default function MenuPage() {
   const { activeOutlet } = useOutlet();
@@ -14,7 +15,7 @@ export default function MenuPage() {
   const { menu, isLoading, refresh } = useMenu(outletId);
 
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<any>(null);
+  const [editing, setEditing] = useState<MenuItem | null>(null);
 
   if (!outletId) {
     return (
@@ -40,7 +41,7 @@ export default function MenuPage() {
       </div>
 
       <MenuTable
-        outletId={outletId} // ✅ REQUIRED
+        outletId={outletId}
         items={menu}
         loading={isLoading}
         onEdit={(item) => {
@@ -53,7 +54,7 @@ export default function MenuPage() {
       {open && (
         <MenuForm
           outletId={outletId}
-          initialData={editing}
+          initialData={editing ?? undefined}
           onClose={() => setOpen(false)}
           onSaved={() => {
             refresh();

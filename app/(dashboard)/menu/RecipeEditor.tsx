@@ -10,11 +10,12 @@ type RecipeEditorProps = {
 };
 
 export default function RecipeEditor({ control, register }: RecipeEditorProps) {
-  const { ingredients } = useIngredients();
+  const { ingredients, isLoading } = useIngredients();
 
   const { fields, append, remove } = useFieldArray({
     control,
     name: "recipe",
+    shouldUnregister: false, // 🔑 keep values during async + reset
   });
 
   return (
@@ -22,8 +23,14 @@ export default function RecipeEditor({ control, register }: RecipeEditorProps) {
       <h3 className="mb-3 font-medium">Recipe</h3>
 
       {fields.map((field, index) => (
-        <div key={field.id} className="mb-2 flex gap-2">
-          <select {...register(`recipe.${index}.ingredientId`)}>
+        <div key={field.id} className="mb-2 flex gap-2 items-center">
+          {/* 🔑 key forces remount when ingredients load */}
+          <select
+            key={`${field.id}-${ingredients.length}`}
+            {...register(`recipe.${index}.ingredientId`)}
+            className="input flex-1"
+            disabled={isLoading}
+          >
             <option value="">Ingredient</option>
             {ingredients.map((i) => (
               <option key={i.id} value={i.id}>
@@ -35,13 +42,18 @@ export default function RecipeEditor({ control, register }: RecipeEditorProps) {
           <input
             type="number"
             step="0.01"
-            placeholder="Quantity"
+            placeholder="Qty"
+            className="input w-24"
             {...register(`recipe.${index}.quantity`, {
-              valueAsNumber: true,
+              required: true,
             })}
           />
 
-          <button type="button" onClick={() => remove(index)}>
+          <button
+            type="button"
+            onClick={() => remove(index)}
+            className="text-red-400 hover:text-red-600"
+          >
             ✕
           </button>
         </div>
@@ -50,7 +62,7 @@ export default function RecipeEditor({ control, register }: RecipeEditorProps) {
       <button
         type="button"
         onClick={() => append({ ingredientId: "", quantity: "" })}
-        className="text-sm text-blue-600"
+        className="mt-2 text-sm text-blue-600 hover:underline"
       >
         + Add ingredient
       </button>

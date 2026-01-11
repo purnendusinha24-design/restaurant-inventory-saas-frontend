@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { apiFetch } from "@/lib/api/client";
 import RecipeEditor from "./RecipeEditor";
-import type { MenuFormValues } from "./types";
+import type { MenuFormValues, MenuItem } from "./types";
 
 type MenuFormProps = {
   outletId: string;
-  initialData?: Partial<MenuFormValues> & { id?: string };
+  initialData?: MenuItem;
   onClose: () => void;
   onSaved: () => void;
 };
@@ -25,45 +25,51 @@ export default function MenuForm({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const { register, handleSubmit, control } = useForm<MenuFormValues>({
+  const { register, handleSubmit, control, reset } = useForm<MenuFormValues>({
     defaultValues: {
-      name: initialData?.name ?? "",
-      price: initialData?.price ?? "",
-      category: initialData?.category ?? "",
-      recipe: initialData?.recipe ?? [],
+      name: "",
+      price: "",
+      category: "",
+      recipe: [],
     },
   });
+
+  useEffect(() => {
+    if (!initialData) return;
+
+    reset({
+      name: initialData.name,
+      price: initialData.price.toString(),
+      category: initialData.category ?? "",
+      recipe: initialData.ingredients.map((i) => ({
+        ingredientId: i.ingredientId,
+        quantity: i.quantityRequired.toString(),
+      })),
+    });
+  }, [initialData, reset]);
 
   const onSubmit = async (values: MenuFormValues) => {
     setError(null);
     setSaving(true);
 
     try {
-      // 1️⃣ CREATE / UPDATE MENU ITEM
-      const menuItem = await apiFetch<{ id: string }>(
-        `/menu/outlets/${outletId}/items`,
+      await apiFetch(
+        isEdit
+          ? `/menu/outlets/${outletId}/items/${initialData!.id}`
+          : `/menu/outlets/${outletId}/items`,
         {
           method: isEdit ? "PUT" : "POST",
           body: JSON.stringify({
             name: values.name.trim(),
-            price: Number(values.price), // 👈 convert here
+            price: Number(values.price),
             category: values.category || null,
+            ingredients: values.recipe.map((r) => ({
+              ingredientId: r.ingredientId,
+              quantityRequired: Number(r.quantity),
+            })),
           }),
         }
       );
-
-      // 2️⃣ ADD INGREDIENTS
-      for (const item of values.recipe) {
-        if (!item.ingredientId || !item.quantity) continue;
-
-        await apiFetch(`/menu/items/${menuItem.id}/ingredients`, {
-          method: "POST",
-          body: JSON.stringify({
-            ingredientId: item.ingredientId,
-            quantityRequired: item.quantity,
-          }),
-        });
-      }
 
       onSaved();
       onClose();
@@ -80,37 +86,24 @@ export default function MenuForm({
       onClose={onClose}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <input
-          {...register("name", { required: true })}
-          placeholder="Item name"
-          className="input"
-        />
-
+        <input {...register("name", { required: true })} className="input" />
         <input
           type="number"
-          placeholder="Price"
           {...register("price", { required: true })}
           className="input"
-          min="0"
-          step="0.01"
         />
-
-        <input
-          {...register("category")}
-          placeholder="Category"
-          className="input"
-        />
+        <input {...register("category")} className="input" />
 
         <RecipeEditor control={control} register={register} />
 
         {error && (
-          <div className="rounded-md bg-red-900/40 px-3 py-2 text-sm text-red-300">
+          <div className="text-sm text-red-400 bg-red-900/40 p-2 rounded">
             {error}
           </div>
         )}
 
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
+          <Button variant="ghost" type="button" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit" disabled={saving}>

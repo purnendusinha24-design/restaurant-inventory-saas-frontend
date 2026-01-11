@@ -1,17 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api/client";
-
-/* =========================
-   Types
-========================= */
-
-export type MenuItem = {
-  id: string;
-  name: string;
-  price: number;
-  category?: string;
-  isActive: boolean;
-};
+import type { MenuItem } from "./types";
 
 type UseMenuResult = {
   menu: MenuItem[];
@@ -19,10 +8,6 @@ type UseMenuResult = {
   error: string | null;
   refresh: () => Promise<void>;
 };
-
-/* =========================
-   Hook
-========================= */
 
 export function useMenu(outletId?: string): UseMenuResult {
   const [menu, setMenu] = useState<MenuItem[]>([]);
@@ -39,7 +24,6 @@ export function useMenu(outletId?: string): UseMenuResult {
       const data = await apiFetch<MenuItem[]>(
         `/menu/outlets/${outletId}/items`
       );
-
       setMenu(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch menu");
