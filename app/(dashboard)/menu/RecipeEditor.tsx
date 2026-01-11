@@ -35,7 +35,7 @@ export default function RecipeEditor({ control, register }: RecipeEditorProps) {
           <input
             type="number"
             step="0.01"
-            placeholder="Qty"
+            placeholder="Quantity"
             {...register(`recipe.${index}.quantity`, {
               valueAsNumber: true,
             })}
@@ -49,7 +49,7 @@ export default function RecipeEditor({ control, register }: RecipeEditorProps) {
 
       <button
         type="button"
-        onClick={() => append({ ingredientId: "", quantity: 0 })}
+        onClick={() => append({ ingredientId: "", quantity: "" })}
         className="text-sm text-blue-600"
       >
         + Add ingredient

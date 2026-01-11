@@ -8,5 +8,5 @@ export type MenuItem = {
 };
 
 export async function fetchMenuItems(outletId: string) {
-  return apiFetch<MenuItem[]>(`/menu/${outletId}`);
+  return apiFetch<MenuItem[]>(`/menu/outlets/${outletId}/items`);
 }

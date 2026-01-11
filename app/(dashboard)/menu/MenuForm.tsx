@@ -26,11 +26,11 @@ export default function MenuForm({
   const [saving, setSaving] = useState(false);
 
   const { register, handleSubmit, control } = useForm<MenuFormValues>({
-    defaultValues: initialData ?? {
-      name: "",
-      price: 0,
-      category: "",
-      recipe: [],
+    defaultValues: {
+      name: initialData?.name ?? "",
+      price: initialData?.price ?? "",
+      category: initialData?.category ?? "",
+      recipe: initialData?.recipe ?? [],
     },
   });
 
@@ -39,21 +39,24 @@ export default function MenuForm({
     setSaving(true);
 
     try {
-      // 1️⃣ CREATE MENU ITEM
-      const menuItem = await apiFetch<{ id: string }>(`/menu/${outletId}`, {
-        method: "POST",
-        body: JSON.stringify({
-          name: values.name.trim(),
-          price: values.price,
-          category: values.category,
-        }),
-      });
+      // 1️⃣ CREATE / UPDATE MENU ITEM
+      const menuItem = await apiFetch<{ id: string }>(
+        `/menu/outlets/${outletId}/items`,
+        {
+          method: isEdit ? "PUT" : "POST",
+          body: JSON.stringify({
+            name: values.name.trim(),
+            price: Number(values.price), // 👈 convert here
+            category: values.category || null,
+          }),
+        }
+      );
 
       // 2️⃣ ADD INGREDIENTS
       for (const item of values.recipe) {
         if (!item.ingredientId || !item.quantity) continue;
 
-        await apiFetch(`/menu/${menuItem.id}/ingredient`, {
+        await apiFetch(`/menu/items/${menuItem.id}/ingredients`, {
           method: "POST",
           body: JSON.stringify({
             ingredientId: item.ingredientId,
@@ -65,32 +68,38 @@ export default function MenuForm({
       onSaved();
       onClose();
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Failed to save menu item");
-      }
+      setError(err instanceof Error ? err.message : "Failed to save menu item");
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Modal title="Add Menu Item" onClose={onClose}>
+    <Modal
+      title={isEdit ? "Edit Menu Item" : "Add Menu Item"}
+      onClose={onClose}
+    >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <input
           {...register("name", { required: true })}
           placeholder="Item name"
+          className="input"
         />
 
         <input
           type="number"
-          step="0.01"
-          {...register("price", { required: true })}
           placeholder="Price"
+          {...register("price", { required: true })}
+          className="input"
+          min="0"
+          step="0.01"
         />
 
-        <input {...register("category")} placeholder="Category" />
+        <input
+          {...register("category")}
+          placeholder="Category"
+          className="input"
+        />
 
         <RecipeEditor control={control} register={register} />
 

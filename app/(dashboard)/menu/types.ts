@@ -1,11 +1,14 @@
 export type RecipeItem = {
   ingredientId: string;
-  quantity: number;
+  quantity: string;
 };
 
 export type MenuFormValues = {
   name: string;
-  price: number;
+  price: string; // 👈 MUST be string for inputs
   category?: string;
-  recipe: RecipeItem[];
+  recipe: {
+    ingredientId: string;
+    quantity: string;
+  }[];
 };

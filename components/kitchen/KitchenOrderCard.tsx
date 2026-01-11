@@ -13,15 +13,23 @@ export default function KitchenOrderCard({
 }: Props) {
   return (
     <div className="rounded-lg bg-slate-900 p-4 shadow">
-      <div className="mb-2 flex justify-between">
+      <div className="mb-2 flex items-center justify-between">
         <h3 className="text-lg font-bold text-white">{order.orderNumber}</h3>
-        <span className="text-sm text-slate-400">{order.status}</span>
+
+        <span className="text-xs uppercase tracking-wide text-slate-400">
+          {order.status}
+        </span>
       </div>
 
-      <ul className="mb-4 text-sm text-slate-300">
-        {order.items.map((item) => (
-          <li key={item.id}>
-            {item.quantity} × {item.name}
+      <ul className="mb-4 space-y-1 text-sm text-slate-300">
+        {order.items.map((item, index) => (
+          <li
+            key={`${order.id}-${item.name}-${index}`}
+            className="flex justify-between"
+          >
+            <span>
+              {item.quantity} × {item.name}
+            </span>
           </li>
         ))}
       </ul>
@@ -30,7 +38,7 @@ export default function KitchenOrderCard({
         {order.status === "PENDING" && (
           <button
             onClick={onPreparing}
-            className="rounded bg-yellow-600 px-3 py-1 text-sm text-white"
+            className="rounded bg-yellow-600 px-3 py-1 text-sm text-white hover:bg-yellow-700"
           >
             Start Preparing
           </button>
@@ -39,7 +47,7 @@ export default function KitchenOrderCard({
         {order.status === "PREPARING" && (
           <button
             onClick={onReady}
-            className="rounded bg-green-600 px-3 py-1 text-sm text-white"
+            className="rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
           >
             Mark Ready
           </button>

@@ -40,6 +40,7 @@ export default function MenuPage() {
       </div>
 
       <MenuTable
+        outletId={outletId} // ✅ REQUIRED
         items={menu}
         loading={isLoading}
         onEdit={(item) => {

@@ -16,6 +16,7 @@ export type OrderListItem = {
   status: OrderStatus;
   createdAt: string;
   completedAt?: string | null;
+  customerPhone?: string;
 };
 
 export type KitchenOrder = {

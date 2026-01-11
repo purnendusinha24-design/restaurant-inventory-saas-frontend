@@ -10,7 +10,7 @@ export type MenuItem = {
   name: string;
   price: number;
   category?: string;
-  isAvailable: boolean;
+  isActive: boolean;
 };
 
 type UseMenuResult = {
@@ -36,7 +36,10 @@ export function useMenu(outletId?: string): UseMenuResult {
     setError(null);
 
     try {
-      const data = await apiFetch<MenuItem[]>(`/menu/${outletId}`);
+      const data = await apiFetch<MenuItem[]>(
+        `/menu/outlets/${outletId}/items`
+      );
+
       setMenu(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch menu");
