@@ -5,38 +5,38 @@ Supports multiple organizations, outlets, role-based access, inventory tracking,
 
 🚀 Features
 
-Multi-tenant architecture
+Multi-tenant architecture - 
     Organizations & outlets
 
-Authentication & Authorization
+Authentication & Authorization - 
     JWT-based auth
     Role-based access control (Owner / Manager / Staff)
 
-Inventory Management
+Inventory Management - 
     Ingredient tracking with units & minimum stock
     Stock in / stock out / adjustments
     Full stock movement logs with reasons
 
-Menu & Recipes
+Menu & Recipes - 
     Menu-to-ingredient mapping
     Auto inventory deduction on orders
 
-Orders
+Orders - 
     Transaction-safe inventory deduction
     Order status transitions enforced
 
-Vendors & Purchases
+Vendors & Purchases - 
     Vendor management
     Purchases with automatic stock-in
 
-Alerts & Monitoring
+Alerts & Monitoring - 
     Low-stock alerts
 
-Reports & Analytics (API-ready)
+Reports & Analytics (API-ready) - 
     Consumption trends
     Wastage tracking
 
-Production Ready
+Production Ready - 
     Prisma ORM
     PostgreSQL
     API-stable & frontend-ready
