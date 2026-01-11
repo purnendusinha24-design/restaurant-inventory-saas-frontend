@@ -1,6 +1,7 @@
 import { ApiError } from "./ApiError";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+// ✅ Normalize API base URL (prevents `//auth/login` bugs)
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
 
 if (!API_BASE_URL) {
   throw new Error("NEXT_PUBLIC_API_URL is not defined");
@@ -41,7 +42,7 @@ export async function apiFetch<T = unknown>(
     },
   });
 
-  // ✅ No content (DELETE, some PUTs)
+  // ✅ No content responses (DELETE / some PUTs)
   if (res.status === 204) {
     return undefined as T;
   }
