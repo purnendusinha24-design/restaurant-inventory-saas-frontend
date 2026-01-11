@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Restaurant Inventory & Operations SaaS – Backend
 
-## Getting Started
+A multi-tenant restaurant inventory and operations backend built for real-world usage.
+Supports multiple organizations, outlets, role-based access, inventory tracking, orders, vendor purchases, and analytics-ready data.
 
-First, run the development server:
+🚀 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Multi-tenant architecture
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Organizations & outlets
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Authentication & Authorization
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+JWT-based auth
 
-## Learn More
+Role-based access control (Owner / Manager / Staff)
 
-To learn more about Next.js, take a look at the following resources:
+Inventory Management
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Ingredient tracking with units & minimum stock
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Stock in / stock out / adjustments
 
-## Deploy on Vercel
+Full stock movement logs with reasons
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Menu & Recipes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Menu-to-ingredient mapping
+
+Auto inventory deduction on orders
+
+Orders
+
+Transaction-safe inventory deduction
+
+Order status transitions enforced
+
+Vendors & Purchases
+
+Vendor management
+
+Purchases with automatic stock-in
+
+Alerts & Monitoring
+
+Low-stock alerts
+
+Reports & Analytics (API-ready)
+
+Consumption trends
+
+Wastage tracking
+
+Production Ready
+
+Prisma ORM
+
+PostgreSQL
+
+API-stable & frontend-ready
+
+🛠 Tech Stack
+
+Framework: NestJS
+
+Language: TypeScript
+
+Database: PostgreSQL
+
+ORM: Prisma
+
+Auth: JWT
+
+Validation: class-validator
+
+API Docs: Swagger (OpenAPI)
